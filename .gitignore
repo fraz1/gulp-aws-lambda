@@ -1,5 +1,7 @@
 node_modules/*
 *.log
-*.production
+env.stage
+env.production
+env.development
 dist/*
 dist.zip

@@ -1,18 +1,23 @@
-var gulp    = require('gulp');
-var gutil   = require('gulp-util');
-var del     = require('del');
-var rename  = require('gulp-rename');
+var gulp = require('gulp');
+var gutil = require('gulp-util');
+var del = require('del');
+var rename = require('gulp-rename');
 var install = require('gulp-install');
-var zip     = require('gulp-zip');
-var AWS     = require('aws-sdk');
-var fs      = require('fs');
-var runSeq  = require('run-sequence');
-var conf    = require('./package.json')
+var zip = require('gulp-zip');
+var AWS = require('aws-sdk');
+var fs = require('fs');
+var runSeq = require('run-sequence');
+var args = require('yargs').argv;
+
+var env = args.env || 'development';
+var dotenv = require('dotenv').config({path: './env.' + env});
+
+console.log(process);
 
 /*
   Clean up before deployment
 */
-gulp.task('clean', function (cb) {
+gulp.task('clean', function(cb) {
   del([
     './dist',
     'dist.zip',
@@ -22,7 +27,7 @@ gulp.task('clean', function (cb) {
 /*
   No need to deploy package json
 */
-gulp.task('prune', function (cb) {
+gulp.task('prune', function(cb) {
   del('./dist/package.json', cb);
 });
 
@@ -31,7 +36,7 @@ gulp.task('prune', function (cb) {
 */
 gulp.task('js', function() {
   return gulp.src('index.js')
-    .pipe(gulp.dest('dist/'))
+    .pipe(gulp.dest('dist/'));
 });
 
 /*
@@ -40,7 +45,9 @@ gulp.task('js', function() {
 gulp.task('npm', function() {
   return gulp.src('./package.json')
     .pipe(gulp.dest('./dist/'))
-    .pipe(install({production: true}));
+    .pipe(install({
+      production: true
+    }));
 });
 
 /*
@@ -48,9 +55,9 @@ gulp.task('npm', function() {
   see .gitignore
 */
 gulp.task('env', function() {
-  return gulp.src('./env.production')
+  return gulp.src('./env.' + env )
     .pipe(rename('.env'))
-    .pipe(gulp.dest('./dist'))
+    .pipe(gulp.dest('./dist'));
 });
 
 /*
@@ -71,19 +78,25 @@ gulp.task('zip', function() {
   See http://aws.amazon.com/sdk-for-node-js/
 */
 gulp.task('upload', function() {
-  AWS.config.region = conf.aws.region;
+  AWS.config.region = process.env.REGION;
   var lambda = new AWS.Lambda();
-  var functionName = conf.aws["function-name"];
+  var functionName = process.env.FUNCTION;
 
-  lambda.getFunction({FunctionName: functionName}, function(err, data) {
+  console.log('func: ' + functionName);
+
+  lambda.getFunction({
+    FunctionName: functionName
+  }, function(err, data) {
+
     if (err) {
+      var warning;
       if (err.statusCode === 404) {
-        var warning = 'Unable to find lambda function ' + functionName + '. '
-        warning += 'Verify the lambda function name and AWS region are correct.'
+        warning = 'Unable to find lambda function ' + functionName + '. ';
+        warning += 'Verify the lambda function name and AWS region are correct.';
         gutil.log(warning);
       } else {
-        var warning = 'AWS API request failed. '
-        warning += 'Check your AWS credentials and permissions.'
+        warning = 'AWS API request failed. ';
+        warning += 'Check your AWS credentials and permissions.';
         gutil.log(warning);
       }
     }
@@ -94,10 +107,10 @@ gulp.task('upload', function() {
     };
 
     fs.readFile('./dist.zip', function(err, data) {
-      params['ZipFile'] = data;
+      params.ZipFile = data;
       lambda.updateFunctionCode(params, function(err, data) {
         if (err) {
-          var warning = 'Package upload failed. ' + err
+          var warning = 'Package upload failed. ' + err;
           gutil.log(warning);
         }
       });
@@ -110,8 +123,7 @@ gulp.task('upload', function() {
 */
 gulp.task('default', function() {
   runSeq(
-    'clean',
-    ['npm', 'js', 'env'],
+    'clean', ['npm', 'js', 'env'],
     'prune',
     'zip',
     'upload'
