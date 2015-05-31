@@ -1,0 +1,39 @@
+{
+  "name": "gulp-aws-lambda",
+  "version": "1.0.0",
+  "description": "skeleton app for deploying aws lambda functions",
+  "scripts": {},
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:fraz1/gulp-aws-lambda.git"
+  },
+  "readme": "README.md",
+  "keywords": [
+    "lambda",
+    "aws"
+  ],
+  "author": "Frazer Horn",
+  "license": "MIT",
+  "aws": {
+    "region": "us-east-1",
+    "function-name": "processInboundEmail"
+
+  },
+  "dependencies": {
+    "async": "^1.0.0",
+    "dotenv": "^1.1.0",
+    "pg": "^4.3.0"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.1.4",
+    "del": "^1.1.0",
+    "gulp": "^3.8.11",
+    "gulp-install": "^0.2.0",
+    "gulp-util": "latest",
+    "gulp-rename": "^1.2.0",
+    "gulp-zip": "^3.0.2",
+    "run-sequence": "^1.1.0",
+    "stream": "0.0.2"
+  }
+}

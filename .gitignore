@@ -1,0 +1,5 @@
+node_modules/*
+*.log
+*.production
+dist/*
+dist.zip
